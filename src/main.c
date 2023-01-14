@@ -60,6 +60,30 @@ int main(void)
 	HAL_Init();
 	SystemClock_Config();
 
+#if defined(STM32G0)
+	if (FLASH->OPTR & FLASH_OPTR_nBOOT_SEL)
+	{
+		// unlock flash
+		FLASH->KEYR = FLASH_KEY1;
+		FLASH->KEYR = FLASH_KEY2;
+
+		// unlock options
+		FLASH->OPTKEYR = FLASH_OPTKEY1;
+		FLASH->OPTKEYR = FLASH_OPTKEY2;
+
+		FLASH->OPTR &= ~(FLASH_OPTR_nBOOT_SEL); // BOOT0 signal is defined by BOOT0 pin value (legacy mode)
+		FLASH_WaitForLastOperation(1000);
+		FLASH->CR |= FLASH_CR_OPTSTRT;
+		FLASH_WaitForLastOperation(1000);
+		FLASH->CR &= ~FLASH_CR_OPTSTRT;
+
+		// lock options
+		FLASH->CR |= FLASH_CR_OPTLOCK;
+		// lock flash
+		FLASH->CR |= FLASH_CR_LOCK;
+	}
+#endif
+
 	gpio_init();
 
 	led_init(&hLED, LEDRX_GPIO_Port, LEDRX_Pin, LEDRX_Active_High, LEDTX_GPIO_Port, LEDTX_Pin, LEDTX_Active_High);
@@ -74,8 +98,11 @@ int main(void)
 
 	led_set_mode(&hLED, led_mode_off);
 	timer_init();
-
+#if defined(STM32F0) || defined(STM32F4)
 	can_init(channel, CAN_INTERFACE);
+#elif defined(STM32G0)
+	can_init(channel, CAN_INTERFACE2);
+#endif
 	can_disable(channel);
 
 	INIT_LIST_HEAD(&hGS_CAN.list_frame_pool);

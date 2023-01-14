@@ -32,6 +32,10 @@ THE SOFTWARE.
 #include "gs_usb.h"
 #include "hal_include.h"
 
+#if defined(STM32G0)
+	#define  CAN_TypeDef FDCAN_GlobalTypeDef
+#endif
+
 typedef struct {
 	CAN_TypeDef *instance;
 	uint16_t brp;

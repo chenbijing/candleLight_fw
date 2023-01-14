@@ -32,9 +32,27 @@ THE SOFTWARE.
 #include "hal_include.h"
 
 void device_can_init(can_data_t *hcan, CAN_TypeDef *instance) {
-	// XXX TODO
-	while (1);
-	return;
+	GPIO_InitTypeDef itd;
+
+	RCC_PeriphCLKInitTypeDef PeriphClkInit;
+	PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_FDCAN;
+	PeriphClkInit.FdcanClockSelection = RCC_FDCANCLKSOURCE_PCLK1;
+	HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+	__HAL_RCC_FDCAN_CLK_ENABLE();
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+
+	itd.Pin = GPIO_PIN_5|GPIO_PIN_6;
+	itd.Mode = GPIO_MODE_AF_PP;
+	itd.Pull = GPIO_NOPULL;
+	itd.Speed = GPIO_SPEED_FREQ_LOW;
+	itd.Alternate = GPIO_AF3_FDCAN2;
+	HAL_GPIO_Init(GPIOB, &itd);
+
+	hcan->instance   = instance;
+	hcan->brp        = 8;
+	hcan->sjw		 = 1;
+	hcan->phase_seg1 = 13;
+	hcan->phase_seg2 = 2;	
 }
 
 void device_sysclock_config(void) {

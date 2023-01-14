@@ -149,7 +149,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
 	hpcd_USB_FS.Init.Sof_enable = DISABLE;
 	hpcd_USB_FS.Init.battery_charging_enable = DISABLE;
 	hpcd_USB_FS.Init.vbus_sensing_enable = DISABLE;
-	hpcd_USB_FS.Init.bulk_doublebuffer_enable = ENABLE;
+	hpcd_USB_FS.Init.bulk_doublebuffer_enable = DISABLE;
 	hpcd_USB_FS.Init.iso_singlebuffer_enable = DISABLE;
 #endif
 	HAL_PCD_Init(&hpcd_USB_FS);
@@ -162,11 +162,16 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
 	*  0xD8 - 0x157 (128 bytes) EP1 OUT (buffer 1)
 	* 0x158 - 0x1D7 (128 bytes) EP1 OUT (buffer 2)
 	*/
-#if defined(USB) || defined(USB_DRD_FS)
+#if defined(USB)
 	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x00, PCD_SNG_BUF, 0x18);
 	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x80, PCD_SNG_BUF, 0x58);
 	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x81, PCD_SNG_BUF, 0x98);
 	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x02, PCD_DBL_BUF, 0x00D80158);
+#elif defined(USB_DRD_FS)
+	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x00, PCD_SNG_BUF, 0x18);
+	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x80, PCD_SNG_BUF, 0x58);
+	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x81, PCD_SNG_BUF, 0x98);
+	HAL_PCDEx_PMAConfig((PCD_HandleTypeDef*)pdev->pData, 0x02, PCD_SNG_BUF, 0xD8);
 #elif defined(USB_OTG_FS)
 	HAL_PCDEx_SetRxFiFo((PCD_HandleTypeDef*)pdev->pData, USB_RX_FIFO_SIZE); // shared RX FIFO
 	HAL_PCDEx_SetTxFiFo((PCD_HandleTypeDef*)pdev->pData, 0U, 64U / 4U);     // 0x80, 64 bytes (div by 4 for words)
