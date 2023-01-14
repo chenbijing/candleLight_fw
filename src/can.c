@@ -41,7 +41,6 @@
 
 #if defined(STM32G0)
 FDCAN_HandleTypeDef hfdcan2;
-// can_data_t *_hcan;
 
 #define CAN_ESR_EWGF_Pos       (0U)                                            
 #define CAN_ESR_EWGF_Msk       (0x1UL << CAN_ESR_EWGF_Pos)                      /*!< 0x00000001 */
@@ -100,7 +99,6 @@ FDCAN_RAM_TypeDef *fdcan_ram = (FDCAN_RAM_TypeDef *)(SRAMCAN_BASE);
 
 #define CANMSG_ID_RTR (1<<30)
 #define CANMSG_ID_EFF (1<<31)
-
 
 #endif
 
@@ -182,7 +180,6 @@ void can_enable(can_data_t *hcan, bool loop_back, bool listen_only, bool one_sho
 				   | (loop_back ? CAN_MODE_LOOPBACK : 0)
 				   | (listen_only ? CAN_MODE_SILENT : 0);
 
-
 	// Reset CAN peripheral
 	can->MCR |= CAN_MCR_RESET;
 	while ((can->MCR & CAN_MCR_RESET) != 0);                                                 // reset bit is set to zero after reset
@@ -213,7 +210,8 @@ void can_enable(can_data_t *hcan, bool loop_back, bool listen_only, bool one_sho
 	can->FMR &= ~CAN_FMR_FINIT;
 
 #elif defined(STM32G0)
-	hfdcan2.Instance = FDCAN2;
+	// hfdcan2.Instance = FDCAN2;
+	hfdcan2.Instance = hcan->instance;
 	hfdcan2.Init.ClockDivider = FDCAN_CLOCK_DIV1;
 	hfdcan2.Init.FrameFormat = FDCAN_FRAME_CLASSIC;
 
@@ -269,7 +267,6 @@ bool can_is_enabled(can_data_t *hcan)
 #if defined(STM32F0) || defined(STM32F4)
 	return (can->MCR & CAN_MCR_INRQ) == 0;
 #elif defined(STM32G0)
-    //  _hcan = hcan;
 	(void) hcan;
 	return (can->CCCR & FDCAN_CCCR_INIT) == 0;
 #endif
@@ -281,7 +278,6 @@ bool can_is_rx_pending(can_data_t *hcan)
 	CAN_TypeDef *can = hcan->instance;
 	return ((can->RF0R & CAN_RF0R_FMP0) != 0);
 #elif defined(STM32G0)
-    //  _hcan = hcan;
 	(void) hcan;
 	return ((FDCAN2->RXF0S & FDCAN_RXF0S_F0FL) != 0);
 #endif	
@@ -323,7 +319,6 @@ bool can_receive(can_data_t *hcan, struct gs_host_frame *rx_frame)
 		return false;
 	}
 #elif defined(STM32G0)
-	// _hcan = hcan;
 	(void) hcan;
 	uint32_t rxf0s = SOC_CAN->RXF0S;
 
@@ -420,8 +415,6 @@ bool can_send(can_data_t *hcan, struct gs_host_frame *frame)
 	}
 
 #elif defined(STM32G0)
-
-    // _hcan = hcan;
 	(void) hcan;
     uint32_t txfqs = SOC_CAN->TXFQS;
     if (txfqs & FDCAN_TXFQS_TFQF)
